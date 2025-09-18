@@ -1,0 +1,88 @@
+name: Deploy Munchies
+
+on:
+    push:
+        branches:
+            - main # Adjust to your desired branch
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22 # Ensure this matches the version you want
+
+            - name: Verify Node.js and npm versions
+              run: |
+                  node -v
+                  npm -v
+
+            - name: Set up SSH
+              uses: webfactory/ssh-agent@v0.9.0
+              with:
+                  ssh-private-key: ${{ secrets.MUNCHIES_KEY }}
+
+            - name: Deploy to Main Server
+              env:
+                  HOST: 208.87.129.110
+                  USERNAME: root
+                  TARGET_DIR: /var/www/munchies/web/frontend/
+                  APP_NAME: Munchies
+                  PORT: 3005
+
+              run: |
+                  # Ensure pm2 is in the PATH
+                  export PATH=/root/.nvm/versions/node/v22.11.0/bin/yarn:$PATH
+                  export PATH=/root/.nvm/versions/node/v22.11.0/bin/pm2:$PATH  # If pm2 installed globally with npm
+
+                  # Check if npm is available
+                  npm -v
+                  echo "Checking pm2 availability"
+                  if ! command -v pm2 &> /dev/null; then
+                      echo "PM2 not found, installing..."
+                      npm install -g pm2
+                  fi
+
+                  # SSH into server and deploy
+                  ssh -o StrictHostKeyChecking=no $USERNAME@$HOST << EOF
+                    # Ensure pm2 is installed
+                    if ! command -v pm2 &> /dev/null; then
+                        echo "PM2 not found, installing..."
+                        npm install -g pm2
+                    fi
+
+                  if ! command -v yarn &> /dev/null; then
+                        echo "Yarn not found, installing..."
+                        npm install -g yarn
+                    fi  
+
+                    # Navigate to the project directory
+                    cd $TARGET_DIR
+
+                    # Pull the latest code from the repository
+                    git pull origin ${GITHUB_REF#refs/heads/}
+
+                    # Install dependencies
+                    yarn install
+
+                    # Build the app
+                    npm run build
+
+                    # Start or restart PM2 process
+                    if pm2 list | grep -q $APP_NAME; then
+                        echo "Restarting application: $APP_NAME"
+                        pm2 restart $APP_NAME
+                    else
+                        echo "Starting application: $APP_NAME"
+                        pm2 start npm --name $APP_NAME -- start -- --port=$PORT
+                    fi
+
+                    # Save PM2 processes
+                    pm2 save
+                  EOF
