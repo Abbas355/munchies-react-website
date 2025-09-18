@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Stack, Typography, useTheme } from '@mui/material'
+import { alpha, Stack, Typography, useTheme } from '@mui/material'
 import {
     CustomPaperBigCard,
     CustomStackFullWidth,
@@ -19,11 +19,11 @@ import toast from 'react-hot-toast'
 import newPasswordImage from '@/assets/images/new_password.svg'
 import CustomImageContainer from '@/components/CustomImageContainer'
 import { CustomSigninOutLine } from '../sign-in'
-import { alpha } from '@material-ui/core'
 import LockIcon from '@mui/icons-material/Lock'
 import { CustomTypography } from '@/components/custom-tables/Tables.style'
+import { onErrorResponse } from '@/components/ErrorResponse'
 
-const NewPassword = ({ data, setModalFor }) => {
+const NewPassword = ({ data, setModalFor,phoneOrEmail }) => {
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setConfirmShowPassword] = useState(false)
     const { t } = useTranslation()
@@ -33,8 +33,10 @@ const NewPassword = ({ data, setModalFor }) => {
         initialValues: {
             reset_token: data.reset_token,
             phone: data.phone,
-            password: '',
-            confirm_password: '',
+            email:data?.email,
+            password: "",
+            confirm_password: "",
+            verification_method:phoneOrEmail
         },
         validationSchema: Yup.object({
             password: Yup.string()
@@ -55,13 +57,15 @@ const NewPassword = ({ data, setModalFor }) => {
     })
     const onSuccessHandler = (res) => {
         if (res) {
-            toast.success(res.message)
-            setModalFor('sign-in')
+            toast.success(res.message, {
+                toastId: "123o38749283492" // ✅ custom ID to prevent duplicate toasts
+            });
+            setModalFor('sign-in');
         }
     }
-    const { mutate, isLoading } = useResetPassword(onSuccessHandler)
+    const { mutate, isLoading } = useResetPassword()
     const formSubmitHandler = (values) => {
-        mutate(values, { onSuccess: onSuccessHandler })
+        mutate(values, { onSuccess: onSuccessHandler,onError:onErrorResponse })
     }
     return (
         <CustomPaperBigCard width="auto" padding="0" noboxshadow="true">

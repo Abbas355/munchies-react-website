@@ -4,9 +4,8 @@ import {
 } from '@/styled-components/CustomStyles.style'
 import { CustomTypographyEllipsis } from '@/styled-components/CustomTypographies.style'
 import { getReviewCount, restaurantDiscountTag } from '@/utils/customFunctions'
-import { Stack, Typography, alpha, styled } from '@mui/material'
+import { Stack, Typography, alpha, styled, Box } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
-import { Box } from '@mui/system'
 import moment from 'moment/moment'
 import { useRouter } from 'next/router'
 import { useTranslation } from 'react-i18next'
@@ -18,6 +17,7 @@ import CustomImageContainer from '../CustomImageContainer'
 import { RestaurantDiscountStack } from '../food-card/FoodCard.style'
 import FoodRating from '../food-card/FoodRating'
 import { HomeTextTypography } from '../home/HomeStyle'
+import CustomNextImage from '@/components/CustomNextImage'
 // import 'react-multi-carousel/lib/styles.css'
 
 export const SliderStack = styled(Stack)(
@@ -268,6 +268,8 @@ const RestaurantBoxCard = (props) => {
 
                         <Box
                             sx={{
+                                display:"flex",
+                                justifyContent:"center",
                                 width: '100%',
                                 height: '130px',
                                 transition: `${theme.transitions.create(
@@ -282,13 +284,16 @@ const RestaurantBoxCard = (props) => {
                                 },
                             }}
                         >
-                            <CustomImageContainer
+                            <CustomNextImage
                                 src={image}
-                                width="100%"
-                                height="100%"
-                                objectFit="cover"
+                                alt={name}
+                                width={image ? '300' : '180'}
+                                height={image?"130":'120'}
+                                objectFit={image?'cover':"contain"}
+                                priority={true}
                                 borderRadius="8px"
                             />
+
                         </Box>
                     </Stack>
                     <CustomStackFullWidth paddingX="5px" spacing={0.4}>
@@ -297,15 +302,17 @@ const RestaurantBoxCard = (props) => {
                             justifyContent="space-between"
                             sx={{ position: 'relative' }}
                         >
-                            <HomeTextTypography>{name}</HomeTextTypography>
+                            <HomeTextTypography component="h3">
+                                {name}
+                            </HomeTextTypography>
                             <Stack flexDirection="row" gap="5px">
-                                <Typography
+                                {rating_count>0 && (<Typography
                                     fontSize="14px"
                                     fontWeight={400}
                                     color={theme.palette.text.secondary}
                                 >
                                     {getReviewCount(rating_count)}
-                                </Typography>
+                                </Typography>)}
                                 {rating !== 0 && (
                                     <FoodRating product_avg_rating={rating} />
                                 )}
@@ -326,6 +333,7 @@ const RestaurantBoxCard = (props) => {
                                 fontSize="12px"
                                 color={theme.palette.neutral[600]}
                                 sx={{ WebkitLineClamp: '1 !important' }}
+                                component="p"
                             >
                                 {characteristics?.length > 0 &&
                                     characteristics?.map((item, index) => (
@@ -385,8 +393,9 @@ const RestaurantBoxCard = (props) => {
                                         fontSize="12px"
                                         color={theme.palette.neutral[600]}
                                         marginLeft="5px"
+                                        sx={{ display: 'flex', alignItems: 'center' }}
                                     >
-                                        {t('Free Delivery')}
+                                        &#8226;&nbsp;{t('Free Delivery')}
                                     </Typography>
                                 )}
                             </Typography>

@@ -3,7 +3,7 @@ import { Box, styled } from '@mui/material'
 import ChatMessages from './ChatMessages'
 import ChatMessageAdd from './ChatMessageAdd'
 
-import { makeStyles } from '@material-ui/core/styles'
+import { makeStyles } from '@mui/styles'
 import LoadingBox from './LoadingBox'
 
 const useStyles = makeStyles((theme) => ({
@@ -53,7 +53,7 @@ const ChatView = ({
     const classes = useStyles()
     return (
         <StyledBox>
-            {/*<SimpleBar style={{ maxHeight: "70vh" }}>*/}
+        
             <Box
                 sx={{
                     overflowY: 'scroll',
@@ -70,12 +70,9 @@ const ChatView = ({
                     />
                 )}
                 {messageIsLoading && <LoadingBox />}
-                {/*<ScrollToBottom />*/}
-                {/*<Stack ref={messagesEndRef}></Stack>*/}
+            
             </Box>
 
-            {/*</SimpleBar>*/}
-            {/*{conversationData?.status && <ChatMessageAdd onSend={handleChatMessageSend}/>}*/}
             <ChatMessageAdd onSend={handleChatMessageSend} />
         </StyledBox>
     )

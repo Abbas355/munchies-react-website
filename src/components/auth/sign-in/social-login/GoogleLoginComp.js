@@ -117,21 +117,44 @@ const GoogleLoginComp = (props) => {
     }
 
     useEffect(() => {
-        if (typeof window !== undefined) {
-            window?.google?.accounts?.id?.initialize({
-                client_id: clientId,
-                callback: handleCallBackResponse,
-            })
-            window?.google?.accounts?.id?.renderButton(
-                document.getElementById('signInDiv'),
-                {
-                    theme: 'outline',
-                    size: 'large',
-                    shape: 'rounded',
-                    width: setButtonWidth(),
-                    logo_alignment: 'left',
+        const initializeGoogleSignIn = () => {
+            if (typeof window !== 'undefined' && window.google?.accounts?.id) {
+                try {
+                    window.google.accounts.id.initialize({
+                        client_id: clientId,
+                        callback: handleCallBackResponse,
+                    })
+                    
+                    const signInDiv = document.getElementById('signInDiv')
+                    if (signInDiv) {
+                        window.google.accounts.id.renderButton(signInDiv, {
+                            theme: 'outline',
+                            size: 'large',
+                            shape: 'rounded',
+                            width: setButtonWidth(),
+                            logo_alignment: 'left',
+                        })
+                    }
+                } catch (error) {
+                    console.error('Error initializing Google Sign-in:', error)
                 }
-            )
+            } else {
+                console.warn('Google Identity Services not loaded, retrying...')
+                // Retry after 1 second
+                setTimeout(initializeGoogleSignIn, 1000)
+            }
+        }
+
+        // Wait for Google script to load
+        if (typeof window !== 'undefined') {
+            if (window.google?.accounts?.id) {
+                initializeGoogleSignIn()
+            } else {
+                // Listen for Google script to load
+                window.addEventListener('load', initializeGoogleSignIn)
+                // Also try after a delay
+                setTimeout(initializeGoogleSignIn, 2000)
+            }
         }
     }, [])
 
@@ -183,6 +206,7 @@ const GoogleLoginComp = (props) => {
                 setModalOpen={setOpenOtpModal}
             >
                 <OtpForm
+                    notForgotPass
                     data={otpData?.phone}
                     formSubmitHandler={formSubmitHandler}
                     isLoading={isLoading}

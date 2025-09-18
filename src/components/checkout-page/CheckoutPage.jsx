@@ -5,9 +5,9 @@ import { ProfileApi } from '@/hooks/react-query/config/profileApi'
 import { RestaurantsApi } from '@/hooks/react-query/config/restaurantApi'
 import {
     formatPhoneNumber,
-    getAmount,
+    getAmount, getCouponDiscount,
     getFinalTotalPrice,
-    getProductDiscount,
+    getProductDiscount, getSubTotalPrice,
     getTaxableTotalPrice,
     getVariation,
     handleDistance,
@@ -21,7 +21,7 @@ import {
     Grid,
     Stack,
     Typography,
-    alpha,
+    alpha, Button,
 } from '@mui/material'
 import moment from 'moment'
 import Router, { useRouter } from 'next/router'
@@ -47,9 +47,9 @@ import {
     setOfflineWithPartials,
     setOrderDetailsModal,
 } from '@/redux/slices/OfflinePayment'
-import { setWalletAmount } from '@/redux/slices/cart'
+import { setCouponAmount, setWalletAmount } from '@/redux/slices/cart'
 import { setUser } from '@/redux/slices/customer'
-import { setZoneData } from '@/redux/slices/global'
+import { setCouponType, setZoneData } from '@/redux/slices/global'
 import {
     CustomPaperBigCard,
     CustomStackFullWidth,
@@ -81,6 +81,12 @@ import useGetMostTrips from '@/hooks/react-query/useGetMostTrips'
 import { setIsNeedLoad } from '@/redux/slices/utils'
 import GuestUserInforForm from '@/components/checkout-page/guest-user/GuestUserInforForm'
 import DineInPreferableTime from '@/components/checkout-page/DineInPreferableTime'
+import CustomNextImage from '@/components/CustomNextImage'
+import { useGetTax } from '@/hooks/react-query/order-place/useGetTax'
+import { CouponApi } from '@/hooks/react-query/config/couponApi'
+import HaveCoupon from '@/components/checkout-page/HaveCoupon'
+import AddIcon from '@mui/icons-material/Add'
+import money from '@/components/checkout-page/assets/fi_2704332.png'
 
 let currentDate = moment().format('YYYY/MM/DD HH:mm')
 let nextday = moment(currentDate).add(1, 'days').format('YYYY/MM/DD')
@@ -105,24 +111,11 @@ export const handleValuesFromCartItems = (variationValues) => {
     }
     return value
 }
-export const handleIdsFromCartItems = (variationValues) => {
-    let value = []
-    if (variationValues?.length > 0) {
-        variationValues?.forEach((item) => {
-            if (item?.isSelected) {
-                value.push(item?.option_id)
-            }
-        })
-    } else {
-        variationValues && value.push(variationValues[0]?.option_id)
-    }
-    return value
-}
 const CheckoutPage = ({ isDineIn }) => {
     const router = useRouter()
     const dispatch = useDispatch()
     const theme = useTheme()
-    const offlineFormRef = useRef()
+    const offlineFormRef = useRef(null)
     const { t } = useTranslation()
     const { global, couponInfo } = useSelector((state) => state.globalSettings)
 
@@ -133,10 +126,11 @@ const CheckoutPage = ({ isDineIn }) => {
         totalAmount,
         walletAmount,
         subscriptionSubTotal,
+        couponAmount
     } = useSelector((state) => state.cart)
     let currentLatLng = undefined
     const [address, setAddress] = useState(undefined)
-    const [paymenMethod, setPaymenMethod] = useState('')
+    const [paymenMethod, setPaymenMethod] = useState('cash_on_delivery')
     const [numberOfDay, setDayNumber] = useState(getDayNumber(today))
     const [orderType, setOrderType] = useState('')
     const [couponDiscount, setCouponDiscount] = useState(null)
@@ -153,10 +147,19 @@ const CheckoutPage = ({ isDineIn }) => {
     const [openModal, setOpenModal] = useState(false)
     const [openPartialModel, setOpenPartialModel] = useState(false)
     const [deliveryTip, setDeliveryTip] = useState(0)
-    const [selected, setSelected] = useState('')
-    const [paymentMethodDetails, setPaymentMethodDetails] = useState({})
+    const [selected, setSelected] = useState({
+
+    })
+    const [paymentMethodDetails, setPaymentMethodDetails] = useState({
+        name: 'cash_on_delivery',
+        image: money,
+    })
     const [cashbackAmount, setCashbackAmount] = useState(null)
     const [extraPackagingCharge, setExtraPackagingCharge] = useState(0)
+    const [changeAmount, setChangeAmount] = useState()
+    const [couponCode, setCouponCode] = useState(null)
+    const [anchorEl, setAnchorEl] = useState(null)
+    const [open,setOpen]=useState(false)
     const { method } = router.query
     const { mutate: offlineMutate, isLoading: offlinePaymentLoading } =
         useOfflinePayment()
@@ -165,6 +168,7 @@ const CheckoutPage = ({ isDineIn }) => {
         (state) => state.offlinePayment
     )
     const { data: tripsData } = useGetMostTrips()
+    const {data:taxData,refetch:taxRefetch,mutate}=useGetTax()
 
     const { data, refetch: refetchNotification } =
         useGetOrderPlaceNotification(orderId)
@@ -186,7 +190,6 @@ const CheckoutPage = ({ isDineIn }) => {
         subscriptionReducer,
         subscriptionsInitialState
     )
-
     //additional information
     const [additionalInformationStates, additionalInformationDispatch] =
         useReducer(
@@ -242,12 +245,14 @@ const CheckoutPage = ({ isDineIn }) => {
         ['get-distance', restaurantData?.data, address],
         () => GoogleApi.distanceApi(restaurantData?.data, address),
         {
+            enabled: !!restaurantData?.data && !!address,
             onError: onErrorResponse,
         }
     )
+   
+    
     const tempDistance =
-        distanceData?.data?.rows?.[0]?.elements[0]?.distance?.value / 1000
-
+        distanceData?.data?.distanceMeters/ 1000
     const { data: extraCharge, refetch: extraChargeRefetch } =
         useGetVehicleCharge({ tempDistance })
     useEffect(() => {
@@ -276,7 +281,7 @@ const CheckoutPage = ({ isDineIn }) => {
         orderId && refetchNotification()
     }, [orderId])
 
-    useEffect(async () => {
+    useEffect(() => {
         currentLatLng = JSON.parse(localStorage.getItem('currentLatLng'))
         const location = localStorage.getItem('location')
         setAddress({
@@ -286,7 +291,12 @@ const CheckoutPage = ({ isDineIn }) => {
             address: location,
             address_type: 'Selected Address',
         })
-        await refetch()
+
+        const apiRefetch = async () => {
+            await refetch()
+        }
+
+        apiRefetch()
     }, [])
 
     useEffect(() => {
@@ -433,7 +443,7 @@ const CheckoutPage = ({ isDineIn }) => {
             coupon_discount_title: couponDiscount?.title,
             discount_amount: getProductDiscount(productList),
             distance: handleDistance(
-                distanceData?.data?.rows?.[0]?.elements,
+                distanceData?.data,
                 restaurantData?.data,
                 address
             ),
@@ -464,9 +474,21 @@ const CheckoutPage = ({ isDineIn }) => {
             extra_packaging_amount: extraPackagingCharge,
             contact_person_email:
                 additionalInformationStates?.dine_in_contact?.email,
+             bring_change_amount: changeAmount
         }
     }
+    useEffect(() => {
+        if(restaurantData?.data?.id){
+            let productList = page === 'campaign' ? campFoodList : cartList
+            let totalQty = 0
+            let carts = handleProductList(productList, totalQty)
+            let order = handleOrderMutationObject(carts, productList)
+            mutate(order,{
+                onError:onErrorResponse
+            })
+        }
 
+    }, [restaurantData?.data?.id,couponDiscount?.discount,cartList,extraPackagingCharge])
     const orderPlaceMutation = (
         carts,
         handleSuccess,
@@ -487,13 +509,15 @@ const CheckoutPage = ({ isDineIn }) => {
     }
 
     const handlePlaceOrder = () => {
+   
+     let productList = page === 'campaign' ? campFoodList : cartList
+      
         let isAvailable =
             page === 'campaign'
                 ? true
                 : isFoodAvailableBySchedule(cartList, scheduleAt)
         if (isAvailable) {
             //const walletBalance = localStorage.getItem('wallet_amount')
-            let productList = page === 'campaign' ? campFoodList : cartList
             if (paymenMethod === 'wallet') {
                 if (Number(walletAmount) < Number(totalAmount)) {
                     toast.error(t('Wallet balance is below total amount.'), {
@@ -644,6 +668,7 @@ const CheckoutPage = ({ isDineIn }) => {
         }
     }
     const placeOrder = () => {
+      
         localStorage.setItem('access', totalAmount)
         if (page !== 'campaign') {
             if (subscriptionStates.order === '1') {
@@ -874,11 +899,11 @@ const CheckoutPage = ({ isDineIn }) => {
                                     padding: '5px 10px',
                                 }}
                             >
-                                <CustomImageContainer
-                                    height="40px"
-                                    width="40px"
+                                <CustomNextImage
+                                    height="40"
+                                    width="40"
                                     src={thunderstorm.src}
-                                    objectFit="contained"
+                                    objectFit="contain"
                                 />
 
                                 <Typography>
@@ -1049,7 +1074,7 @@ const CheckoutPage = ({ isDineIn }) => {
     }, [restaurantData, global])
 
     const handleExtraPackaging = (e) => {
-        setIsExtraPackaging(e.target.checked)
+        setExtraPackagingCharge(e.target.checked)
         if (e.target.checked) {
             setExtraPackagingCharge(
                 restaurantData?.data?.extra_packaging_amount
@@ -1076,6 +1101,15 @@ const CheckoutPage = ({ isDineIn }) => {
                 image: global?.active_payment_method_list[0]
                     ?.gateway_image_full_url,
             })
+        }else{
+
+            if(global?.cash_on_delivery){
+                setSelected({
+                    name:"cash_on_delivery",
+                    image:money
+                })
+            }
+
         }
     }
 
@@ -1083,6 +1117,55 @@ const CheckoutPage = ({ isDineIn }) => {
         hasOnlyPaymentMethod()
     }, [global])
 
+    const totalAmountForRefer = couponDiscount
+        ? getSubTotalPrice(cartList) -
+        getProductDiscount(cartList, restaurantData) -
+        getCouponDiscount(couponDiscount, restaurantData, cartList)
+        : getSubTotalPrice(cartList) -
+        getProductDiscount(cartList, restaurantData)
+
+    useEffect(() => {
+        dispatch(setCouponAmount(totalAmountForRefer))
+    },[totalAmountForRefer])
+
+
+    const handleCouponDiscount = () => {
+        let couponDiscountValue = getCouponDiscount(
+            couponDiscount,
+            restaurantData,
+            cartList
+        )
+        if (couponDiscount && couponDiscount.coupon_type === 'free_delivery') {
+            setFreeDelivery('true')
+            return 0
+        } else {
+            let discount = getAmount(
+                couponDiscountValue,
+                currencySymbolDirection,
+                currencySymbol,
+                digitAfterDecimalPoint
+            )
+            return discount
+        }
+    }
+    useEffect(() => {
+        dispatch(setCouponType(''))
+    }, [])
+    const handleClose = () => {
+        setOpen(false)
+    }
+    const handleClick = (event) => {
+        setOpen(true)
+    }
+    const { isLoading, data:couponData} = useQuery(
+        ['coupon-list'],
+        ()=>CouponApi.couponList(totalAmountForRefer,restaurantData?.data?.id),
+        {
+            enabled: !!getToken() && !!restaurantData?.data?.id && !!totalAmountForRefer,
+            retry: 1,
+            onError: onSingleErrorResponse,
+        }
+    )
     return (
         <Grid
             container
@@ -1168,25 +1251,7 @@ const CheckoutPage = ({ isDineIn }) => {
                                     tripsData={tripsData}
                                 />
                             )}
-                        {subscriptionStates.order !== '1' &&
-                            global?.customer_wallet_status === 1 &&
-                            walletAmount > 0 &&
-                            global?.partial_payment_status === 1 && (
-                                <PartialPayment
-                                    offLineWithPartial={offLineWithPartial}
-                                    global={global}
-                                    remainingBalance={
-                                        walletAmount - totalAmount
-                                    }
-                                    handlePartialPayment={handlePartialPayment}
-                                    usePartialPayment={usePartialPayment}
-                                    walletBalance={walletAmount}
-                                    paymentMethod={paymenMethod}
-                                    switchToWallet={switchToWallet}
-                                    removePartialPayment={removePartialPayment}
-                                    totalAmount={totalAmount}
-                                />
-                            )}
+                    
                         <PaymentOptions
                             global={global}
                             paymenMethod={paymenMethod}
@@ -1199,6 +1264,13 @@ const CheckoutPage = ({ isDineIn }) => {
                             setPaymentMethodDetails={setPaymentMethodDetails}
                             setSwitchToWallet={setSwitchToWallet}
                             offlinePaymentOptions={offlinePaymentOptions}
+                            walletAmount={walletAmount}
+                            totalAmount={totalAmount}
+                            switchToWallet={switchToWallet}
+                            handlePartialPayment = {handlePartialPayment}
+                            removePartialPayment = {removePartialPayment}
+                            setChangeAmount={setChangeAmount}
+                            changeAmount={changeAmount}
                         />
                     </Stack>
                 ) : (
@@ -1241,6 +1313,56 @@ const CheckoutPage = ({ isDineIn }) => {
                             />
                         </SimpleBar>
                         <Stack>
+                            {token && (
+                                <Grid item md={12} xs={12} marginTop="5px" mb="5px">
+                                    <Stack
+                                        direction="row"
+                                        justifyContent="space-between"
+                                        alignItems="center"
+                                    >
+                                        <Typography
+                                            fontSize="14px"
+                                            fontWeight="600"
+                                            color={theme.palette.neutral[1000]}
+                                        >
+                                            {t('Promo Code')}
+                                        </Typography>
+                                        <Button
+                                            endIcon={
+                                                <AddIcon
+                                                    style={{
+                                                        fontSize: '18px',
+                                                        fontWeight: '700',
+                                                    }}
+                                                />
+                                            }
+                                            onClick={handleClick}
+                                        >
+                                            {t('Add Voucher')}
+                                        </Button>
+                                    </Stack>
+                                </Grid>
+                            )}
+                            {restaurantData?.data && token && (
+                                <HaveCoupon
+                                    restaurant_id={restaurantData?.data?.id}
+                                    setCouponDiscount={setCouponDiscount}
+                                    counponRemove={counponRemove}
+                                    couponDiscount={couponDiscount}
+                                    cartList={cartList}
+                                    total_order_amount={total_order_amount}
+                                    setCouponCode={setCouponCode}
+                                    couponCode={couponCode}
+                                    data={couponData}
+                                    anchorEl={anchorEl}
+                                    setAnchorEl={setAnchorEl}
+                                    handleClose={handleClose}
+                                    totalAmountForRefer={totalAmountForRefer}
+                                    open={open}
+                                    setOpen={setOpen}
+
+                                />
+                            )}
                             {restaurantData?.data?.cutlery &&
                                 orderType === 'delivery' && (
                                     <Box mb={1}>
@@ -1363,6 +1485,8 @@ const CheckoutPage = ({ isDineIn }) => {
                             cashbackAmount={cashbackAmount}
                             extraPackagingCharge={extraPackagingCharge}
                             distanceLoading={distanceLoading}
+                            taxData={taxData}
+                            handleCouponDiscount={handleCouponDiscount}
                         />
                     </Stack>
                 </CustomPaperBigCard>

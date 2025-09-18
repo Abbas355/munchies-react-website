@@ -107,7 +107,7 @@ const Homes = ({ configData }) => {
     const {
         data,
         refetch: refetchBannerData,
-        isLoading: bannerIsLoading,
+        isFetched
     } = useQuery(['banner-image'], BannerApi.bannerList, {
         enabled: false,
         staleTime: 1000 * 60 * 8,
@@ -146,27 +146,30 @@ const Homes = ({ configData }) => {
         onError: onSingleErrorResponse,
     })
 
-    useEffect(async () => {
-        if (
-            (banners?.banners?.length === 0 &&
-                banners?.campaigns?.length === 0) ||
-            isNeedLoad
-        ) {
-            await refetchBannerData()
-        }
-        if (addStores?.length === 0 || isNeedLoad) {
-            await addRefetch()
-        }
+    const apiRefetch = async () => {
+            if (
+                (banners?.banners?.length === 0 &&
+                    banners?.campaigns?.length === 0) ||
+                isNeedLoad
+            ) {
+                await refetchBannerData()
+            }
+            if (addStores?.length === 0 || isNeedLoad) {
+                await addRefetch()
+            }
 
-        if (campaignFoods?.length === 0 || isNeedLoad) {
-            await refetchCampaignData()
+            if (campaignFoods?.length === 0 || isNeedLoad) {
+                await refetchCampaignData()
+            }
+            if (bestReviewedFoods?.length === 0 || isNeedLoad) {
+                await refetchMostReviewed()
+            }
+            if (popularFood?.length === 0 || isNeedLoad) {
+                await refetchNearByPopularRestaurantData()
+            }
         }
-        if (bestReviewedFoods?.length === 0 || isNeedLoad) {
-            await refetchMostReviewed()
-        }
-        if (popularFood?.length === 0 || isNeedLoad) {
-            await refetchNearByPopularRestaurantData()
-        }
+    useEffect(() => {
+        apiRefetch()
     }, [])
 
     useEffect(() => {
@@ -235,6 +238,7 @@ const Homes = ({ configData }) => {
         setOpenDrawer(!openDrawer)
     }
 
+    
     return (
         <PushNotificationLayout>
             <CustomContainer>
@@ -257,6 +261,7 @@ const Homes = ({ configData }) => {
                                 md: '700',
                             }}
                             color={theme.palette.neutral[1000]}
+                            component="h1"
                         >
                             {t('Find Best Restaurants and Foods')}
                         </Typography>
@@ -275,7 +280,7 @@ const Homes = ({ configData }) => {
                                             }}
                                         >
                                             <CustomImageContainer
-                                                src={mapIcon.src}
+                                                src={mapIcon?.src}
                                                 alt="map"
                                                 width="24px"
                                                 height="24px"
@@ -297,7 +302,7 @@ const Homes = ({ configData }) => {
                                             }}
                                         >
                                             <CustomImageContainer
-                                                src={mapIcon.src}
+                                                src={mapIcon?.src}
                                                 alt="map"
                                                 width="24px"
                                                 height="24px"
@@ -332,7 +337,7 @@ const Homes = ({ configData }) => {
             ) : (
                 <>
                     <CustomContainer>
-                        <Banner bannerIsLoading={bannerIsLoading} />
+                        <Banner isFetched={isFetched} data={data} />
                     </CustomContainer>
                     <Box>
                         <FeatureCatagories height="70px" />
@@ -342,7 +347,7 @@ const Homes = ({ configData }) => {
                                 data={addStores}
                                 isLoading={addIsLoading}
                             />
-                            {configData?.dine_in_order_option === 1 ? (
+                            {configData?.data?.dine_in_order_option === 1 ? (
                                 <DineIn />
                             ) : null}
                         </CustomContainer>
@@ -356,10 +361,10 @@ const Homes = ({ configData }) => {
                             }
                         />
                         <NewRestaurant />
-                        {global && <Cuisines />}
+                        {configData && <Cuisines />}
 
-                        {global?.banner_data?.promotional_banner_image && (
-                            <PromotionalBanner global={global} />
+                        {configData?.banner_data?.promotional_banner_image && (
+                            <PromotionalBanner global={configData} />
                         )}
 
                         <Restaurant />

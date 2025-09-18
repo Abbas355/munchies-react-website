@@ -73,7 +73,7 @@ export function FacebookCircularProgress(props) {
     )
 }
 
-const HeroLocationForm = ({ mobileview, handleModalClose }) => {
+const HeroLocationForm = ({ mobileview, handleModalClose, getLocation }) => {
     const { t } = useTranslation()
     const [open, setOpen] = useState(false)
     const router = useRouter()
@@ -108,6 +108,15 @@ const HeroLocationForm = ({ mobileview, handleModalClose }) => {
     const { userLocationUpdate } = useSelector((state) => state.globalSettings)
     const dispatch = useDispatch()
     const isXSmall = useMediaQuery(theme.breakpoints.down('sm'))
+
+    useEffect(() => {
+        if (getLocation) {
+           // setShowCurrentLocation(false)
+            getLocation(location)
+            setGeoLocationEnable(false)
+        }
+    }, [location])
+
 
     const handleCloseLocation = () => {
         setOpenLocation(false)
@@ -184,13 +193,20 @@ const HeroLocationForm = ({ mobileview, handleModalClose }) => {
 
     useEffect(() => {
         if (placeDetails) {
-            setLocation(placeDetails?.data?.result?.geometry?.location)
+            setLocation({
+                lat: placeDetails?.data?.location?.latitude,
+                    lng: placeDetails?.data?.location?.longitude,
+                })
         }
     }, [placeDetails])
 
     useEffect(() => {
         if (places) {
-            setPredictions(places?.data?.predictions)
+            const tempData= places?.data?.suggestions?.map((item) => ({
+                place_id: item?.placePrediction?.placeId,
+                description: `${item?.placePrediction?.structuredFormat?.mainText?.text}, ${item?.placePrediction?.structuredFormat?.secondaryText?.text|| ""}`
+            }))
+            setPredictions(tempData)
         }
     }, [places])
     useEffect(() => {
@@ -230,9 +246,8 @@ const HeroLocationForm = ({ mobileview, handleModalClose }) => {
             })
         }
     }
-
     return (
-        <NoSsr>
+        <>
             <Stack
                 maxWidth="630px"
                 width="100%"
@@ -241,11 +256,15 @@ const HeroLocationForm = ({ mobileview, handleModalClose }) => {
                     alpha(theme.palette.primary.main, 0.3)
                 }
                 borderRadius={isXSmall ? '0px' : '10px'}
-                marginTop={!isXSmall && '26px'}
-                marginBottom={isXSmall && '1.5rem'}
+                marginTop={getLocation ? '' : !isXSmall && '26px'}
+                marginBottom={getLocation ? '1rem' : isXSmall && '1.5rem'}
                 sx={{
-                    paddingBlock: mobileview === 'true' ? '0rem' : '1rem',
-                    paddingInline: '1rem',
+                    paddingBlock: getLocation
+                        ? ''
+                        : mobileview === 'true'
+                        ? '0rem'
+                        : '1rem',
+                    paddingInline: getLocation ? '' : '1rem',
                 }}
             >
                 <CustomBox component="form">
@@ -273,7 +292,7 @@ const HeroLocationForm = ({ mobileview, handleModalClose }) => {
                                         sx={{
                                             '& .MuiAutocomplete-inputRoot': {
                                                 paddingRight: '26px !important',
-                                                paddingTop: '3px',
+                                                paddingTop: getLocation ? '' : '3px',
                                             },
                                         }}
                                         loading={isFetching}
@@ -296,6 +315,7 @@ const HeroLocationForm = ({ mobileview, handleModalClose }) => {
                                         renderInput={(params) => (
                                             <CssTextField
                                                 mobileview={mobileview}
+                                                getLocation={getLocation}
                                                 languageDirection={
                                                     languageDirection
                                                 }
@@ -327,11 +347,11 @@ const HeroLocationForm = ({ mobileview, handleModalClose }) => {
                                                     endAdornment: (
                                                         <IconButton
                                                             sx={{
-                                                                mr: mobileview
+                                                                mr: getLocation
+                                                                    ? '-20px'
+                                                                    : mobileview
                                                                     ? '-20px'
                                                                     : '-30px',
-                                                                paddingInlineEnd:
-                                                                    '-40px',
                                                             }}
                                                             onClick={() =>
                                                                 handleAgreeLocation()
@@ -347,10 +367,11 @@ const HeroLocationForm = ({ mobileview, handleModalClose }) => {
                                     />
                                 ) : (
                                     <CssTextField
-                                        sx={{ paddingTop: '3px' }}
+                                        sx={{ paddingTop: getLocation ? '' : '3px', width: '100%' }}
+                                        getLocation={getLocation}
                                         mobileview={mobileview}
                                         languageDirection={languageDirection}
-                                        size="small"
+                                        size={!getLocation && 'small'}
                                         variant="outlined"
                                         id="outlined-basic"
                                         placeholder={t(
@@ -450,57 +471,66 @@ const HeroLocationForm = ({ mobileview, handleModalClose }) => {
                         {mobileview === 'false' && (
                             <CustomTypography>{t('Or')}</CustomTypography>
                         )}
-                        {mobileview === 'true' ? (
-                            <Stack
-                                direction="row"
-                                width="100%"
-                                paddingTop="10px"
-                                gap="20px"
-                                justifyContent="center"
-                            >
-                                {isFetching ? (
-                                    <StyledButton
-                                        sx={{
-                                            fontWeight: '400',
-                                            width: {
-                                                xs: '137px',
-                                                sm: '134px',
-                                                md: '134px',
-                                            },
-                                        }}
+                        {!getLocation && (
+                            <>
+                                {mobileview === 'true' ? (
+                                    <Stack
+                                        direction="row"
+                                        width="100%"
+                                        paddingTop="10px"
+                                        gap="20px"
+                                        justifyContent="center"
                                     >
-                                        <Stack py="5px">
-                                            <AnimationDots size="0px" />
-                                        </Stack>
-                                    </StyledButton>
+                                        {isFetching ? (
+                                            <StyledButton
+                                                sx={{
+                                                    fontWeight: '400',
+                                                    width: {
+                                                        xs: '137px',
+                                                        sm: '134px',
+                                                        md: '134px',
+                                                    },
+                                                }}
+                                            >
+                                                <Stack py="5px">
+                                                    <AnimationDots size="0px" />
+                                                </Stack>
+                                            </StyledButton>
+                                        ) : (
+                                            <StyledButton
+                                                onClick={() =>
+                                                    setLocationEnable()
+                                                }
+                                                disabled={!location}
+                                            >
+                                                <Typography
+                                                    fontWeight="400"
+                                                    fontSize="14px"
+                                                >
+                                                    {t('Set Location')}
+                                                </Typography>
+                                            </StyledButton>
+                                        )}
+                                        <StyledButton onClick={handleOpen}>
+                                            <Typography
+                                                fontWeight="400"
+                                                fontSize="14px"
+                                            >
+                                                {t('Pick Form Map')}
+                                            </Typography>
+                                        </StyledButton>
+                                    </Stack>
                                 ) : (
-                                    <StyledButton
-                                        onClick={() => setLocationEnable()}
-                                        disabled={!location}
-                                    >
+                                    <StyledButton onClick={handleOpen}>
                                         <Typography
                                             fontWeight="400"
                                             fontSize="14px"
                                         >
-                                            {t('Set Location')}
+                                            {t('Pick Form Map')}
                                         </Typography>
                                     </StyledButton>
                                 )}
-                                <StyledButton onClick={handleOpen}>
-                                    <Typography
-                                        fontWeight="400"
-                                        fontSize="14px"
-                                    >
-                                        {t('Pick Form Map')}
-                                    </Typography>
-                                </StyledButton>
-                            </Stack>
-                        ) : (
-                            <StyledButton onClick={handleOpen}>
-                                <Typography fontWeight="400" fontSize="14px">
-                                    {t('Pick Form Map')}
-                                </Typography>
-                            </StyledButton>
+                            </>
                         )}
                     </CustomStackFullWidth>
                 </CustomBox>
@@ -516,7 +546,7 @@ const HeroLocationForm = ({ mobileview, handleModalClose }) => {
                     handleAgreeLocation={handleAgreeLocation}
                 />
             )}
-        </NoSsr>
+        </>
     )
 }
 

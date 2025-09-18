@@ -1,4 +1,4 @@
-import { alpha, Stack, styled, Typography, Box } from '@mui/material'
+import { alpha, Stack, styled, Typography, Box, useMediaQuery } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { useRouter } from 'next/router'
 import { useTranslation } from 'react-i18next'
@@ -16,6 +16,7 @@ import { HomeTextTypography } from '../home/HomeStyle'
 import DelivaryTruckIcon from '../../assets/images/icons/DelivaryTruckIcon'
 import DistanceIcon from '../../assets/images/icons/DistanceIcon'
 import RestaurantItemsIcon from '../../assets/images/icons/RestaurantItemsIcon'
+import CustomNextImage from '@/components/CustomNextImage'
 
 const ProfilePhotoWrapper = styled(Stack)(({ theme }) => ({
     justifyContent: 'center',
@@ -45,6 +46,7 @@ const LatestRestaurantCard = (props) => {
     const { t } = useTranslation()
     const theme = useTheme()
     const router = useRouter()
+    const isSmall = useMediaQuery(theme.breakpoints.down('md'))
     const { global } = useSelector((state) => state.globalSettings)
     let currencySymbol
     let currencySymbolDirection
@@ -234,11 +236,11 @@ const LatestRestaurantCard = (props) => {
                                         {discountChip()}
                                     </Stack>
                                 )}
-                                <CustomImageContainer
+                                <CustomNextImage
                                     src={image}
-                                    width="100%"
-                                    height="100%"
-                                    objectFit="cover"
+                                    width="310"
+                                    height="100"
+                                    objectFit={image?"cover":"contain"}
                                     borderRadius="8px"
                                 />
                             </Box>
@@ -251,14 +253,15 @@ const LatestRestaurantCard = (props) => {
                         >
                             <ProfilePhotoWrapper
                                 width={{ xs: '50px', md: '70px' }}
-                                height={{ xs: '42px', md: '70px' }}
+                                minWidth={{ xs: '50px', md: '70px' }}
+                                height={{ xs: '50px', md: '70px' }}
                                 padding={{ xs: '5px', md: '10px' }}
                             >
-                                <CustomImageContainer
+                                <CustomNextImage
                                     src={logo}
-                                    width={{ xs: '30px', md: '50px' }}
-                                    height={{ xs: '30px', md: '50px' }}
-                                    objectFit="cover"
+                                    width={isSmall?'30':'50'}
+                                    height={isSmall?'30':'50'}
+                                    objectFit={logo?"cover":"contain"}
                                     borderRadius="100%"
                                 />
                             </ProfilePhotoWrapper>
@@ -272,7 +275,7 @@ const LatestRestaurantCard = (props) => {
                                     justifyContent="space-between"
                                     sx={{ position: 'relative' }}
                                 >
-                                    <HomeTextTypography>
+                                    <HomeTextTypography component="h3">
                                         {name.length > 30
                                             ? `${name.slice(0, 30)}... `
                                             : name}
@@ -291,6 +294,7 @@ const LatestRestaurantCard = (props) => {
                                         WebkitBoxOrient: 'vertical',
                                         wordWrap: 'break-word',
                                     }}
+                                    component="p"
                                 >
                                     {characteristics?.length > 0 &&
                                         characteristics?.map((item, index) => (
@@ -357,10 +361,10 @@ const LatestRestaurantCard = (props) => {
                                             fontSize="12px"
                                             fontWeight={400}
                                         >
-                                            {foods_count?.length
-                                                ? foods_count?.length > 99
-                                                    ? `${foods_count?.length}+`
-                                                    : `${foods_count?.length}` +
+                                            {foods_count
+                                                ? foods_count> 99
+                                                    ? `${foods_count}+`
+                                                    : `${foods_count}` +
                                                       ` items`
                                                 : ''}
                                         </Typography>

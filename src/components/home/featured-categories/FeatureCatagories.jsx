@@ -90,9 +90,14 @@ const FeatureCatagories = () => {
         ],
     }
 
+    if (!featuredCategories) {
+        return null
+    }
+
     return (
         <Card
             sx={{
+                cursor:"pointer",
                 paddingTop: categoryIsSticky && '.5rem',
                 position: 'sticky',
                 top: { xs: '91px', md: '108px' },
@@ -101,6 +106,7 @@ const FeatureCatagories = () => {
                 boxShadow: categoryIsSticky
                     ? '0px 1px 1px rgba(100, 116, 139, 0.06), 0px 1px 2px rgba(100, 116, 139, 0.1)'
                     : 'none',
+
             }}
         >
             <CustomContainer>
@@ -109,7 +115,7 @@ const FeatureCatagories = () => {
                     ref={catOffsetElementRef}
                     gap={{ xs: '.3rem', md: '.5rem' }}
                 >
-                    {!categoryIsSticky && (
+                    {!categoryIsSticky && featuredCategories?.length > 0 && (
                         <Grid item xs={12} md={12}>
                             <Stack
                                 direction="row"
@@ -119,6 +125,7 @@ const FeatureCatagories = () => {
                                 <Typography
                                     fontSize={{ xs: '16px', md: '20px' }}
                                     fontWeight={{ xs: '500', md: '700' }}
+                                    component="h2"
                                 >
                                     {t('Whats on Your Mind?')}
                                 </Typography>
@@ -166,13 +173,7 @@ const FeatureCatagories = () => {
                                     />
                                 ))}
                             </Slider>
-                        ) : (
-                            <CustomShimmerCategories
-                                noSearchShimmer="true"
-                                itemCount="7"
-                                smItemCount="5"
-                            />
-                        )}
+                        ) : null}
                     </Grid>
                 </Grid>
             </CustomContainer>

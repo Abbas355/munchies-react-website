@@ -41,7 +41,6 @@ const ProductSearchPage = ({
     const [pageData, setPageData] = useState({})
     const [searchOrPage, setSearchOrPage] = useState({})
     const [totalData, setTotalData] = useState(null)
-    console.log(filterData?.filterByCuisine)
     const activeFilters = searchTagData.filter((item) => item.isActive === true)
     const apiKey =
         foodOrRestaurant === 'products'
@@ -83,7 +82,7 @@ const ProductSearchPage = ({
     }
 
     const isDineIn = restaurantType === 'dine_in' ? restaurantType : ''
-    const { isLoading, data, isError, error, refetch, isRefetching } = useQuery(
+    const {  data, isError, error, refetch, isRefetching,isFetching,isLoading } = useQuery(
         [
             apiKey,
             foodOrRestaurant,
@@ -108,6 +107,7 @@ const ProductSearchPage = ({
             onError: onErrorResponse,
         }
     )
+    
     //POPULAR AND BEST REVIEW FOOD API
     const {
         isLoading: popularFoodisLoading,
@@ -144,25 +144,6 @@ const ProductSearchPage = ({
             onError: onErrorResponse,
         }
     )
-    // const {
-    //     isLoading: isLoadingDineIn,
-    //     data: newRestuarants,
-    //     refetch: dineRefetch,
-    // } = useQuery(
-    //     ['latest-restaurants'],
-    //     () => RestaurantsApi?.latestRestaurants(),
-    //     {
-    //         enabled: false,
-    //         onSuccess: handleAPiCallOnSuccess,
-    //         onError: onErrorResponse,
-    //     }
-    // )
-    //
-    // useEffect(() => {
-    //     if (page === 'dine_in') {
-    //         dineRefetch()
-    //     }
-    // }, [page, offset])
 
     useEffect(() => {
         const refetchData = () => {
@@ -215,16 +196,21 @@ const ProductSearchPage = ({
             router.push('/home')
         }
     }, [searchTagData])
-    useEffect(async () => {
-        if (searchValue) {
-            await refetch()
-        } else if (tags && page) {
-            await refetch()
-        } else if (tags) {
-            if (activeFilters?.length > 0) {
+
+    useEffect(() => {
+        const apiRefetch = async () => {
+            if (searchValue) {
                 await refetch()
+            } else if (tags && page) {
+                await refetch()
+            } else if (tags) {
+                if (activeFilters?.length > 0) {
+                    await refetch()
+                }
             }
         }
+
+        apiRefetch()
     }, [searchValue, filterData, tags, offset])
     useEffect(() => {
         setOffset(1)
@@ -286,7 +272,6 @@ const ProductSearchPage = ({
     useEffect(() => {
         setOffset(1)
     }, [searchTagData, selectedName, searchValue])
-
     return (
         <>
             <Meta
@@ -304,7 +289,7 @@ const ProductSearchPage = ({
                         isLoading={
                             isLoading ||
                             restaurantIsLoading ||
-                            popularFoodisLoading
+                            popularFoodisLoading ||isFetching
                         }
                         isNetworkCalling={isRefetching}
                         data={pageData}

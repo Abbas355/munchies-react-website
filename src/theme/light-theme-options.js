@@ -49,21 +49,20 @@ const background = {
     profileBackground: '#FBFBFB',
     toaster: '#FFFFFF',
 }
-const newsletterBG = '#ffe3e0'
+const newsletterBG = '#2287FD'
 
 const divider = '#E6E8F0'
 // main: '#EF7822',
 // secondary main: '#ff903f',
 const primary = {
-    main: '#7E1734',
+    main: '#FF7918',
     light: 'rgba(255, 121, 24, 0.60)',
-    dark: '#661228',
+    dark: '#a3460a',
     contrastText: '#FFFFFF',
     midPrimary: ' #FFF5ED',
     overLay: '#000000',
 }
 const searchBoxBg = primary.main
-
 const secondary = {
     main: '#934916',
     light: '#db5c00',
@@ -74,7 +73,7 @@ const secondary = {
 const whiteContainer = {
     main: '#F9FAFC',
     light: '#EF7822',
-    dark: '#F9FAFC',
+    dark: '#ff903f',
     contrastText: '#EF7822',
 }
 const whiteText = {
@@ -119,12 +118,12 @@ const customColor = {
     five: '#FFE1E2',
     six: '#414141',
     seven: '#2C1D13',
-    eight: '#7e1734',
-    nine: '#7e1734',
+    eight: '#FFBE0B',
+    nine: '#FB5607',
     ten: '#FFFFFF',
     eleven: '#039D55',
     twelve: '#334257',
-    thirteen: '#E9E1E5',
+    thirteen: '#FFE5CD',
     fourteen: '#FCEA10',
     fifteen: '#3E594D',
 }
@@ -132,6 +131,7 @@ const customColor = {
 const text = {
     primary: '#121828',
     secondary: '#65748B',
+    info: '#0788FF',
     custom: '#242424',
     disabled: 'rgba(55, 65, 81, 0.48)',
     footerText: '#F5F6F8',
@@ -279,13 +279,14 @@ export const lightThemeOptions = {
                 },
             },
         },
+
     },
 
     palette: {
         action: {
             active: neutral[500],
             focus: 'rgba(55, 65, 81, 0.12)',
-            hover: '#7e1734',
+            hover: '#ff903f',
             selected: 'rgba(55, 65, 81, 0.08)',
             disabledBackground: 'rgba(55, 65, 81, 0.12)',
             disabled: 'rgba(55, 65, 81, 0.26)',

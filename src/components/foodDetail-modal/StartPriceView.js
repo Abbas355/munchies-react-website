@@ -21,28 +21,17 @@ const StartPriceView = (props) => {
     }
 
     const handleConvertedPrice = () => {
-        if (data?.restaurant_discount === 0) {
-            return getAmount(
-                getConvertDiscount(
-                    data.discount,
-                    data.discount_type,
-                    data.price,
-                    data.restaurant_discount
-                ),
-                currencySymbolDirection,
-                currencySymbol,
-                digitAfterDecimalPoint
-            )
-        } else {
-            let price =
-                data?.price - (data?.price * data?.restaurant_discount) / 100
-            return getAmount(
-                price,
-                currencySymbolDirection,
-                currencySymbol,
-                digitAfterDecimalPoint
-            )
-        }
+        return getAmount(
+            getConvertDiscount(
+                data.discount,
+                data.discount_type,
+                data.price,
+                data.restaurant_discount
+            ),
+            currencySymbolDirection,
+            currencySymbol,
+            digitAfterDecimalPoint
+        )
     }
 
     return (
@@ -53,7 +42,7 @@ const StartPriceView = (props) => {
             flexWrap="wrap"
         >
             {hideStartFromText === 'false' && (
-                <Typography>{t('Starts From:')}</Typography>
+                <Typography component="p">{t('Starts From:')}</Typography>
             )}
             <Typography
                 display="flex"
@@ -63,6 +52,7 @@ const StartPriceView = (props) => {
                 sx={{
                     fontSize: { xs: '13px', sm: '16px' },
                 }}
+                component="p"
             >
                 {data?.price > 0 && handleConvertedPrice()}
                 {data?.price === handleConvertedPrice() ? (

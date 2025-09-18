@@ -19,6 +19,7 @@ import { CustomStackForFoodModal } from '../foodDetail-modal/FoodModalStyle'
 import FoodRating from './FoodRating'
 import QuickView from './QuickView'
 import { useRouter } from 'next/router'
+import CustomNextImage from '@/components/CustomNextImage'
 const CardWrapper = styled(Box)(({ theme }) => ({
     position: 'relative',
     maxHeight: '160px',
@@ -83,15 +84,12 @@ const ProductCardMedia = (props) => {
             {!image && (
                 <Stack sx={{ overflow: 'hidden' }}>
                     <CardWrapper>
-                        {isAvailable(
-                            available_time_starts,
-                            available_time_ends
-                        ) && (
+
                             <Stack
                                 position="absolute"
                                 bottom="10%"
                                 left="0"
-                                zIndex="1"
+                                zIndex="999"
                             >
                                 {handleBadge(
                                     product,
@@ -101,7 +99,7 @@ const ProductCardMedia = (props) => {
                                     available_date_ends
                                 )}
                             </Stack>
-                        )}
+
                         {isRestaurantDetails &&
                             isSmall &&
                             product?.avg_rating !== 0 &&
@@ -155,16 +153,16 @@ const ProductCardMedia = (props) => {
                                 />
                             </CustomOverLay>
                         )}
-                        <CustomImageContainer
+                        <CustomNextImage
                             src={imageUrl}
                             alt={alt}
-                            width="100%"
-                            height="160px"
+                            width='250'
+                            height={isSmall?"130":"160"}
                             borderRadius="8px"
-                            objectFit="cover"
-                            smHeight="130px"
+                            objectFit={imageUrl?"cover":"contain"}
+
                         />
-                        {router.pathname !== `/restaurant/[id]` && (
+                        {/* {router.pathname !== `/restaurant/[id]` && (
                             <CustomStackForFoodModal
                                 padding="12px"
                                 direction="row"
@@ -183,7 +181,7 @@ const ProductCardMedia = (props) => {
                                     {product?.max_delivery_time} {t('min')}
                                 </Typography>
                             </CustomStackForFoodModal>
-                        )}
+                        )} */}
                     </CardWrapper>
                 </Stack>
             )}

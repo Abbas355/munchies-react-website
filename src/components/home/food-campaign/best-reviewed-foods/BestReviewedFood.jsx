@@ -143,7 +143,7 @@ const BestReviewedFood = ({ isLoading }) => {
             {
                 breakpoint: 400,
                 settings: {
-                    slidesToShow: 1.25,
+                    slidesToShow: 1.4,
                     slidesToScroll: 1,
                     initialSlide: 0,
                 },
@@ -205,6 +205,7 @@ const BestReviewedFood = ({ isLoading }) => {
                                 color={theme.palette.neutral[1000]}
                                 fontSize={{ xs: '16px', md: '20px' }}
                                 fontWeight={{ xs: '500', md: '700' }}
+                                component="h2"
                             >
                                 {t('Best Reviewed Foods')}
                             </Typography>
@@ -304,7 +305,7 @@ const BestReviewedFood = ({ isLoading }) => {
                                     paddingBottom={isXSmall ? '14px' : '20px'}
                                     languageDirection={languageDirection}
                                 >
-                                    <Slider
+                                    {bestReviewedFoods?.length > 0 && ( <Slider
                                         ref={foodCampaignSliderRef}
                                         {...settings}
                                     >
@@ -331,6 +332,7 @@ const BestReviewedFood = ({ isLoading }) => {
                                             }
                                         })}
                                     </Slider>
+                                    )}
                                 </SliderCustom>
                             </CustomStackFullWidth>
                         </Grid>

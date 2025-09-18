@@ -163,6 +163,8 @@ const FoodCampaign = ({ isLoading }) => {
                     md={12}
                     sm={12}
                     lg={12}
+                    sx={{display: campaignFoods?.length > 0 ? 'block' : 'none'}}
+
                     onMouseEnter={() => setHoverOn(true)}
                     onMouseLeave={() => setHoverOn(false)}
                 >
@@ -183,8 +185,10 @@ const FoodCampaign = ({ isLoading }) => {
                                 fontSize={{ xs: '16px', md: '20px' }}
                                 fontWeight={{ xs: '500', md: '700' }}
                                 color={theme.palette.neutral[1000]}
+                                component="h2"
                             >
                                 {t('Todays Trends')}
+
                             </Typography>
                         </Stack>
                     )}
@@ -197,9 +201,10 @@ const FoodCampaign = ({ isLoading }) => {
                                     paddingBottom={isSmall ? '10px' : '20px'}
                                     languageDirection={languageDirection}
                                 >
-                                    <Slider
-                                        ref={foodCampaignSliderRef}
-                                        {...settings}
+                                        {campaignFoods?.length > 0 && (
+                                        <Slider
+                                            ref={foodCampaignSliderRef}
+                                            {...settings}
                                     >
                                         {campaignFoods?.map((product) => {
                                             if (
@@ -223,7 +228,8 @@ const FoodCampaign = ({ isLoading }) => {
                                                 )
                                             }
                                         })}
-                                    </Slider>
+                                        </Slider>
+                                    )}
                                 </SliderCustom>
                             </CustomStackFullWidth>
                         ) : (

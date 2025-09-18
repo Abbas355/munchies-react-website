@@ -18,7 +18,7 @@ const FoodDetailModal = dynamic(() =>
     import('../foodDetail-modal/FoodDetailModal')
 )
 
-const Banner = ({ bannerIsLoading }) => {
+const Banner = ({ isFetched, data }) => {
     const router = useRouter()
     const { banners } = useSelector((state) => state.storedData)
     const [allBanners, setAllBanners] = useState()
@@ -159,25 +159,31 @@ const Banner = ({ bannerIsLoading }) => {
             },
         ],
     }
+    const mergeBanner = [
+        ...(data?.data?.banners || []),
+        ...(data?.data?.campaigns || [])
+    ];
+    const bData = mergeBanner || bannerData;
 
     return (
         <CustomStackFullWidth
             sx={{
                 paddingTop: {
-                    xs: bannerData?.length > 0 && '15px',
-                    md: bannerData?.length > 0 && '10px',
+                    xs: bData?.length > 0 && '15px',
+                    md: bData?.length > 0 && '10px',
                 },
                 paddingBottom: { xs: '30px', md: '20px' },
             }}
         >
-            {!bannerIsLoading ? (
-                <SliderCustom
-                    gap=".8rem"
-                    onMouseEnter={() => setHoverOn(true)}
-                    onMouseLeave={() => setHoverOn(false)}
-                >
+            <SliderCustom
+                gap=".8rem"
+                onMouseEnter={() => setHoverOn(true)}
+                onMouseLeave={() => setHoverOn(false)}
+                sx={{minHeight:{xs:"165px",md:"185px"}}}
+            >
+                {isFetched ? (
                     <Slider {...bannerSettings}>
-                        {bannerData?.slice(0, 8).map((banner) => {
+                        {bData?.slice(0, 8).map((banner) => {
                             return (
                                 <BannerCard
                                     banner={banner}
@@ -187,38 +193,23 @@ const Banner = ({ bannerIsLoading }) => {
                             )
                         })}
                     </Slider>
-                </SliderCustom>
-            ) : (
-                <SliderCustom gap=".8rem" sx={{ paddingTop: '5px' }}>
+                ) : (
                     <Slider {...bannerSettings}>
-                        <Skeleton
-                            sx={{ borderRadius: '10px' }}
-                            maxWidth="390px"
-                            width="100%"
-                            height="179px"
-                            variant="rectangular"
-                        />
-                        <Skeleton
-                            sx={{ borderRadius: '10px' }}
-                            maxWidth="390px"
-                            width="100%"
-                            height="179px"
-                            variant="rectangular"
-                        />
-                        <Skeleton
-                            sx={{ borderRadius: '10px' }}
-                            maxWidth="390px"
-                            width="100%"
-                            height="179px"
-                            variant="rectangular"
-                        />
+                        {[...Array(4)].map((i) => {
+                            return (
+                                <BannerCard
+                                    key={i}
+                                    onlyShimmer
+                                />
+                            )
+                        })}
                     </Slider>
-                </SliderCustom>
-            )}
+                )}
+            </SliderCustom>
             {FoodBannerData && openModal && (
                 <FoodDetailModal
                     product={FoodBannerData}
-                    image={`${global?.base_urls?.product_image_url}/${FoodBannerData?.image}`}
+                    image={FoodBannerData?.image_full_url}
                     open={openModal}
                     handleModalClose={handleModalClose}
                     setOpen={setOpenModal}

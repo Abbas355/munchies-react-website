@@ -99,7 +99,7 @@ const NavCatagory = ({ setRestaurantModal, languageDirection }) => {
             <Popover
                 disableScrollLock={true}
                 id="mouse-over-popover"
-                open={opendrop}
+                open={featuredCategories?.length>0 && opendrop}
                 anchorEl={anchorEl}
                 anchorOrigin={{
                     vertical: 'bottom',
@@ -136,6 +136,7 @@ const NavCatagory = ({ setRestaurantModal, languageDirection }) => {
                                                                     name: category?.name,
                                                                 },
                                                             }}
+                                                            style={{textDecoration: 'none'}}
                                                         >
                                                             <MenuItem
                                                                 key={index}
@@ -182,6 +183,7 @@ const NavCatagory = ({ setRestaurantModal, languageDirection }) => {
                                                                             .palette
                                                                             .neutral[1000]
                                                                     }
+                                                                    textDecoration="none"
                                                                 >
                                                                     {
                                                                         category.name
@@ -213,6 +215,7 @@ const NavCatagory = ({ setRestaurantModal, languageDirection }) => {
                                                                     name: category?.name,
                                                                 },
                                                             }}
+                                                            style={{textDecoration: 'none'}}
                                                         >
                                                             <MenuItem
                                                                 key={index}
@@ -296,6 +299,7 @@ const NavCatagory = ({ setRestaurantModal, languageDirection }) => {
                                                                 name: category?.name,
                                                             },
                                                         }}
+                                                        style={{textDecoration: 'none'}}
                                                     >
                                                         <MenuItem
                                                             onClick={
@@ -366,6 +370,7 @@ const NavCatagory = ({ setRestaurantModal, languageDirection }) => {
                                                                 name: category?.name,
                                                             },
                                                         }}
+                                                        style={{textDecoration: 'none'}}
                                                     >
                                                         <MenuItem
                                                             key={index}

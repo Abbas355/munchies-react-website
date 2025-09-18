@@ -151,15 +151,31 @@ const Chat = ({ page }) => {
         }
     }, [id, type, routeName, chatFrom, channelList, restaurantName])
 
-    useEffect(async () => {
+    useEffect(() => {
         if (channelId) {
-            await refetch()
+            const apiRefetch = async () => {
+                await refetch()
+            }
+
+            apiRefetch()
         }
     }, [channelId])
+
     useEffect(() => {
         setMessagesData([data])
     }, [data])
     const handleChannelOnClick = async (value) => {
+        router.push(
+                {
+                    pathname: '/info',
+                    query: {
+                        page: 'inbox',
+                    
+                    },
+                },
+                undefined,
+                { shallow: true }
+            )
         setReceiverId(null)
         await refetchChannelList()
         if (value.receiver_type === 'admin') {
@@ -183,9 +199,13 @@ const Chat = ({ page }) => {
         mdDown && setIsSidebarOpen((prevState) => !prevState)
     }
 
-    useEffect(async () => {
+    useEffect(() => {
         if (useType) {
-            await refetchChannelList()
+            const apiRefetch = async () => {
+                await refetchChannelList()
+            }
+
+            apiRefetch()
         }
     }, [useType])
     const { mutate: storeMessageByMutate, isLoading: isLoadingMessageSend } =
@@ -255,6 +275,7 @@ const Chat = ({ page }) => {
         receiver?.receiver_type === 'customer'
             ? receiver?.sender?.image_full_url
             : receiverImage
+             
     return (
         <PushNotificationLayout refetch={refetch} pathName="info">
             <Meta

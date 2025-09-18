@@ -6,6 +6,8 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useTheme } from '@mui/styles'
 import { Box, useMediaQuery } from '@mui/material'
 import { useGetLocation } from '@/utils/custom-hook/useGetLocation'
+import useGetCheckZone from '@/hooks/react-query/zone-list/useGetCheckZone'
+import toast from 'react-hot-toast'
 
 const MapWithSearch = ({
     orderType,
@@ -19,6 +21,9 @@ const MapWithSearch = ({
     polygonPaths,
     handleLocation,
     restaurantAddressHandler,
+                           setInZone,
+                           zoneId,
+                           handleAgreeLocation
 }) => {
     const theme = useTheme()
     const dispatch = useDispatch()
@@ -59,6 +64,18 @@ const MapWithSearch = ({
         handleLocation?.(location)
     }, [currentLocationValue])
 
+    const successHandler = (res) => {
+        setInZone(res);
+        if (!res) {
+            toast.error("Out Of The Zone");
+        }
+    };
+    const { data: checkedData } = useGetCheckZone(
+        location,
+        zoneId,
+        successHandler
+    );
+    
     return (
         <CustomStackFullWidth spacing={1} gap="12px">
             {!searchBoxInside && (
@@ -134,6 +151,7 @@ const MapWithSearch = ({
                         }
                         isGps={isGps}
                         polygonPaths={polygonPaths}
+                        handleAgreeLocation={handleAgreeLocation}
                     />
                 </Box>
             )}
